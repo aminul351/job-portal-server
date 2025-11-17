@@ -38,6 +38,15 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/jobs/:id', async(req, res) => {
+      const {id} = req.params.id
+      const query = {  _id : new Object(id)}
+      const result = await jobsCollection.findOne(query) 
+      res.send(result);
+
+      // db.collection.findOne(query, projection, options)
+    })
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

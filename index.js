@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 const port = process.env.PORT || 3000
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 
 
@@ -30,24 +30,32 @@ async function run() {
 
     const database = client.db("job-portal");
     const jobsCollection = database.collection("jobs");
+    const applicationsCollection = client.db('job-portal').collection('applications')
 
     // jobs api
-    app.get('/jobs', async(req, res) => {
+    app.get('/jobs', async (req, res) => {
       const cursor = jobsCollection.find()
       const result = await cursor.toArray()
       res.send(result)
     })
 
-    app.get('/jobs/:id', async(req, res) => {
-      const {id} = req.params.id
-      const query = {  _id : new Object(id)}
-      const result = await jobsCollection.findOne(query) 
+    app.get('/jobs/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await jobsCollection.findOne(query)
       res.send(result);
+      // console.log('result',result);
 
       // db.collection.findOne(query, projection, options)
     })
 
 
+
+    app.post('/application', async (req, res) => {
+      const application = req.body
+      const result = await applicationsCollection.insertOne(application)
+      res.send(result)
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -60,11 +68,11 @@ run().catch(console.dir);
 
 
 
-app.get('/', (req, res) =>{
-    res.send('is cooking')
+app.get('/', (req, res) => {
+  res.send('is cooking')
 })
 
 
-app.listen(port, () =>{
-    console.log(`job portal server is running on port ${port}`);
+app.listen(port, () => {
+  console.log(`job portal server is running on port ${port}`);
 })

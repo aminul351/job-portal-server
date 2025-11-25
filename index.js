@@ -34,21 +34,44 @@ async function run() {
 
     // jobs api
     app.get('/jobs', async (req, res) => {
-      const cursor = jobsCollection.find()
+
+      const email = req.query.email
+      const query = {}
+      if(email){
+        query.hr_email = email
+      }
+
+      const cursor = jobsCollection.find(query)
       const result = await cursor.toArray()
       res.send(result)
     })
+
+
+
+
+    // job getting by email 
+    // app.get('/postedJob', async (req, res) => {
+    //   const email = req.query.email
+    //   const query = {hr_email : email}
+    //   const result = await jobsCollection.find(query).toArray()
+    //   res.send(result)
+    // })
+
 
     app.get('/jobs/:id', async (req, res) => {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await jobsCollection.findOne(query)
       res.send(result);
-      // console.log('result',result);
 
       // db.collection.findOne(query, projection, options)
     })
 
+    app.post('/jobs', async(req, res) => {
+      const jobs = req.body
+      const result = await jobsCollection.insertOne(jobs)
+      res.send(result)
+    })
 
 
     app.post('/application', async (req, res) => {
@@ -56,6 +79,43 @@ async function run() {
       const result = await applicationsCollection.insertOne(application)
       res.send(result)
     })
+
+
+
+    app.get('/application', async (req, res) => {
+      const email = req.query.email;
+      const query = { applicant: email }
+      const result = await applicationsCollection.find(query).toArray()
+
+
+      for (const application of result) {
+        const jobId = application.jobId;
+        const jobQuery = {_id : new ObjectId(jobId)}
+        const job = await jobsCollection.findOne(jobQuery)
+        application.title = job.title
+        application.company = job.company
+        application.company_logo = job.company_logo
+        application.location = job.location
+
+      }
+
+      res.send(result)
+    })
+
+
+
+
+    app.get('/application/job/:job_id', async(req, res) => {
+      const job_id = req.params.job_id
+      const query = {jobId : job_id}
+      const result = await applicationsCollection.find(query).toArray()
+      res.send(result)
+    })
+
+
+
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
